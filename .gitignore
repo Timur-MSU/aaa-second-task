@@ -1,0 +1,19 @@
+# IDE & Jupyter
+.idea/
+.ipynb_checkpoints/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated output
+departmental_summary.csv
