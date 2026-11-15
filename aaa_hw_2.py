@@ -1,9 +1,13 @@
 import csv
 
-all_data = []
-with open("Corp_Summary.csv", "r", encoding="utf-8") as f:
-    reader = csv.reader(f, delimiter=';')
-    all_data = list(reader)
+INPUT_FILE = "Corp_Summary.csv"
+OUTPUT_FILE = "departmental_summary.csv"
+
+
+def read_csv_file(filepath=INPUT_FILE):
+    with open(filepath, "r", encoding="utf-8") as file:
+        reader = csv.reader(file, delimiter=";")
+        return list(reader)
 
 
 def hierarchy_report(data):
@@ -25,6 +29,14 @@ def hierarchy_report(data):
     return hierarchy
 
 
+def print_hierarchy(hierarchy):
+    for department, divisions in sorted(hierarchy.items()):
+        print(f"{department}:")
+        for division, posts in sorted(divisions.items()):
+            posts_str = ", ".join(sorted(posts))
+            print(f"  - {division}: {posts_str}")
+
+
 def departmental_summary(data):
     summary = {}
     for row in data[1:]:
@@ -42,10 +54,24 @@ def departmental_summary(data):
         if summary[department]["max_salary"] < salary:
             summary[department]["max_salary"] = salary
 
-    for el, values in summary.items():
-        summary[el]["avg_salary"] = summary[el].pop("sum_salary")
-        summary[el]["avg_salary"] = summary[el]["avg_salary"] / summary[el]["number_of_employees"]
+    for values in summary.values():
+        values["avg_salary"] = values.pop("sum_salary")
+        values["avg_salary"] = values["avg_salary"] / values["number_of_employees"]
     return summary
+
+
+def print_departmental_summary(summary):
+    for department, values in summary.items():
+        employees = values["number_of_employees"]
+        min_sal = values["min_salary"]
+        max_sal = values["max_salary"]
+        avg_sal = values["avg_salary"]
+        print(
+            f"{department}: сотрудников — {employees}, "
+            f"мин. зарплата — {min_sal:.2f}, "
+            f"макс. зарплата — {max_sal:.2f}, "
+            f"средняя зарплата — {avg_sal:.2f}"
+        )
 
 
 def save_departmental_summary_to_csv(summary_data, filename):
@@ -70,19 +96,34 @@ def save_departmental_summary_to_csv(summary_data, filename):
             ])
 
 
-def report(number):
+def report(number, input_file=INPUT_FILE, output_file=OUTPUT_FILE):
     if type(number) is not int:
         raise TypeError()
+
+    data = read_csv_file(input_file)
+
     if number == 1:
-        result = hierarchy_report(all_data)
-        return result
+        hierarchy = hierarchy_report(data)
+        print_hierarchy(hierarchy)
     elif number == 2:
-        result = departmental_summary(all_data)
-        return result
+        summary = departmental_summary(data)
+        print_departmental_summary(summary)
     elif number == 3:
-        save_departmental_summary_to_csv(
-            departmental_summary(all_data),
-            "departmental_summary.csv"
-        )
+        summary = departmental_summary(data)
+        save_departmental_summary_to_csv(summary, output_file)
+        print(f"Отчёт сохранён в файл {output_file}")
     else:
         print("Неизвестная команда")
+
+
+if __name__ == "__main__":
+    choice = input(
+        "Выберите вариант отчёта:\n"
+        "1 — Иерархия для каждого департамента\n"
+        "2 — Сводка по департаментам\n"
+        "3 — Сохранить сводку по департаментам в CSV\n"
+    )
+    if choice.isdigit():
+        report(int(choice))
+    else:
+        print("Ошибка: нужно ввести целое число от 1 до 3.")
